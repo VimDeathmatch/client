@@ -1,0 +1,5 @@
+node_modules/
+.zshrc.bak
+/out
+/oeunth
+/logger/target/

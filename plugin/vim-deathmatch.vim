@@ -3,6 +3,8 @@ fun! VimDeathmatch()
     lua require("vim-deathmatch").start()
 endfun
 
+com! VimDeathmatch call VimDeathmatch()
+
 augroup VimDeathmatch
     autocmd!
     autocmd WinClosed * :lua require("vim-deathmatch").onWinClose(vim.fn.expand('<afile>'))

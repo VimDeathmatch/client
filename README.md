@@ -13,8 +13,16 @@ removals. You got this, except when you dont
 
 ### Getting Started (The less fun version)
 0. Build and use NeoVim 0.5.x branch
-1. Git clone this repo
-2. Open up neovim in the repo like so: nvim --cmd "set rtp+=$(pwd)" .
-  - Or set the runtime path in vim.
+1. Add to your plugin manager.
+```
+Plug 'VimDeathmatch/client'
+```
+
+Then execute the install.
+
+```
+:PlugInstall
+```
+
 3. Execute `:VimDeathmatch`
 

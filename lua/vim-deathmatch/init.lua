@@ -19,7 +19,7 @@ local function start()
         print("Data", data)
     end)
 
-    channel:open("45.56.120.121", 42069, vim.schedule_wrap(function(err)
+    channel:open("45.79.21.82", 42069, vim.schedule_wrap(function(err)
         if err ~= nil then
             print("Could not connect to Vim-Deathmatch's Servers.")
             return

@@ -11,7 +11,7 @@ local states = {
 
 local Channel = {}
 function getIp(host)
-    local results = vim.loop.getaddrinfo("deathmatch.theprimeagen.tv")
+    local results = vim.loop.getaddrinfo(host)
     local actualAddr = nil
 
     for idx = 1, #results do
@@ -198,8 +198,17 @@ function Channel:open(host, port, callback)
     local count = 0
     local ip = getIp(host)
 
+    local connected = false
+    local failed = false
+
     self.client:connect(ip, port, function (err)
+        connected = true
+        if failed then
+            return
+        end
+
         if err ~= nil then
+            callback(err)
             return
         end
 
@@ -209,7 +218,6 @@ function Channel:open(host, port, callback)
         end
 
         self.state = states.waitingForLength
-
         self.client:read_start(vim.schedule_wrap(function(err, chunk)
             if chunk == nil then
                 self:onWinClose()
@@ -217,7 +225,14 @@ function Channel:open(host, port, callback)
             self:processMessage(chunk)
         end))
 
-        callback(err);
+        callback(nil);
+    end)
+
+    vim.fn.timer_start(10000, function()
+        failed = true
+        if not connected then
+            callback("Unable to connect to deathmach.theprimeagen.tv:42069")
+        end
     end)
 end
 

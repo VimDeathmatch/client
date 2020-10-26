@@ -2,8 +2,14 @@ local Channel = require("vim-deathmatch.channel")
 local Game = require("vim-deathmatch.game")
 local log = require("vim-deathmatch.print")
 
-channel = channel or nil
-game = game or nil
+local channel = nil
+local game = nil
+
+local function onWinLeave()
+    if game then
+        game:focus()
+    end
+end
 
 local function onWinClose(winId)
     winId = tonumber(winId)
@@ -12,6 +18,9 @@ local function onWinClose(winId)
         game:onWinClose(winId)
         channel:onWinClose(winId)
     end
+
+    game = nil
+    channel = nil
 end
 
 local function start()
@@ -32,6 +41,7 @@ end
 
 return {
     onWinClose = onWinClose,
+    onWinLeave = onWinLeave,
     start = start
 }
 

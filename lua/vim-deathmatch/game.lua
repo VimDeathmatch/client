@@ -52,7 +52,7 @@ function Game:start()
 
     self.state = states.waitingToStart
     self:_writeBuffer(self.bufh[1], "Waiting for server response...")
-    game:_setEditable(false)
+    self:_setEditable(false)
 end
 
 function Game:isWindowId(winId)
@@ -249,6 +249,14 @@ local function createEmpty(count)
     end
 
     return lines
+end
+
+function Game:focus()
+    vim.schedule(function()
+        if self.winId and vim.api.nvim_win_is_valid(self.winId[1]) then
+            vim.api.nvim_set_current_win(self.winId[1])
+        end
+    end)
 end
 
 function Game:_clearBuffer(bufh)

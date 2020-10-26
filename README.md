@@ -28,7 +28,7 @@ Then execute the install.
 
 ## THINGS WE WANT
 
-* no buffer change.  Cannot unfocus buffer
+* resize
 * Intro screen
   - local stats
   - uuid identity such that we can start having online stats that are completely anon.
@@ -36,3 +36,8 @@ Then execute the install.
 * Server lag calculations to help ensure most accurate game play
 * Think about puzzles that actually have real neet tricks that can be used,
   * perhaps even generating them...
+
+### V2
+
+* cut and paste from other window?
+  - needs to be solved with running neovim on the server

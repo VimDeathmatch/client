@@ -28,7 +28,6 @@ Then execute the install.
 
 ## THINGS WE WANT
 
-* resize
 * Intro screen
   - local stats
   - uuid identity such that we can start having online stats that are completely anon.

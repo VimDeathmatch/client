@@ -9,5 +9,6 @@ augroup VimDeathmatch
     autocmd!
     autocmd WinClosed * :lua require("vim-deathmatch").onWinClose(vim.fn.expand('<afile>'))
     autocmd WinLeave * :lua require("vim-deathmatch").onWinLeave()
+    autocmd VimResized * :lua require("vim-deathmatch").onResized()
 augroup END
 

@@ -155,8 +155,10 @@ function Game:_setEditable(editable)
 end
 
 function Game:_createOrResizeWindow()
-    local w = vim.fn.nvim_win_get_width(0)
-    local h = vim.fn.nvim_win_get_height(0)
+
+    local vimStats = vim.api.nvim_list_uis()[1]
+    local w = vimStats.width
+    local h = vimStats.height
 
     local width = math.floor(w / 2) - 2
     local height = h - 2
@@ -212,11 +214,12 @@ function Game:_createOrResizeWindow()
         }
         log.info("Game:_createOrResizeWindow: new windows", vim.inspect(self.winId))
     else
+
         log.info("Game:_createOrResizeWindow: resizing windows", vim.inspect(rcConfig1))
         vim.api.nvim_win_set_config(
-            self.bufh[1], vim.tbl_extend("force", config, rcConfig1))
+            self.winId[1], vim.tbl_extend("force", config, rcConfig1))
         vim.api.nvim_win_set_config(
-            self.bufh[2], vim.tbl_extend("force", config, rcConfig2))
+            self.winId[2], vim.tbl_extend("force", config, rcConfig2))
     end
 end
 

@@ -11,6 +11,12 @@ local function onWinLeave()
     end
 end
 
+local function onResized()
+    if game then
+        game:_createOrResizeWindow()
+    end
+end
+
 local function onWinClose(winId)
     winId = tonumber(winId)
 
@@ -42,6 +48,7 @@ end
 return {
     onWinClose = onWinClose,
     onWinLeave = onWinLeave,
+    onResized = onResized,
     start = start
 }
 

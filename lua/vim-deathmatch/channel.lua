@@ -8,12 +8,25 @@ local states = {
     ended = 4,
 }
 
+
 local Channel = {}
+function getIp(host)
+    local results = vim.loop.getaddrinfo("deathmatch.theprimeagen.tv")
+    local actualAddr = nil
+
+    for idx = 1, #results do
+        local res = results[idx]
+        if res.family == "inet" and res.socktype == "stream" then
+            actualAddr = res.addr
+        end
+    end
+
+    return actualAddr
+end
 
 function Channel:new()
     self.__index = self
 
-    log.info("I AM HERE")
     local channel = setmetatable({
         idx = 0,
         state = states.waitingForConnection,
@@ -183,7 +196,9 @@ end
 function Channel:open(host, port, callback)
     self.client = vim.loop.new_tcp()
     local count = 0
-    self.client:connect(host, port, function (err)
+    local ip = getIp(host)
+
+    self.client:connect(ip, port, function (err)
         if err ~= nil then
             return
         end

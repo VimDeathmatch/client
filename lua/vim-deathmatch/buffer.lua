@@ -2,6 +2,16 @@ local log = require("vim-deathmatch.print")
 
 local Buffer = {}
 
+local function createEmpty(count)
+    local lines = {}
+    for idx = 1, count, 1 do
+        lines[idx] = ""
+    end
+
+    return lines
+end
+
+
 function Buffer:new(winId, bufh)
     local config = {
         winId = winId,
@@ -34,6 +44,14 @@ function Buffer:write(idx, msg)
 
     vim.api.nvim_buf_set_lines(self.bufh[idx], 0, #msg - 1, false, msg)
     self:setEditable(editable)
+end
+
+function Buffer:clear()
+    for idx = 1, #self.bufh do
+        local bufh = self.bufh[idx]
+        emptyLines = createEmpty(vim.api.nvim_buf_line_count(bufh))
+        vim.api.nvim_buf_set_lines(bufh, 0, #emptyLines - 1, false, emptyLines)
+    end
 end
 
 return Buffer

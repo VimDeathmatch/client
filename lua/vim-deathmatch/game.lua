@@ -75,7 +75,7 @@ function Game:_onMessage(msgType, data)
     log.info("Game:_onMessage", msgType, data)
 
     self.buffer:setEditable(true)
-    self:_clearBuffer(1)
+    self.buffer:clear()
 
     self.left = msg.left
     self.right = msg.right
@@ -221,27 +221,12 @@ function Game:_createOrResizeWindow()
     end
 end
 
-local function createEmpty(count)
-    local lines = {}
-    for idx = 1, count, 1 do
-        lines[idx] = ""
-    end
-
-    return lines
-end
-
 function Game:focus()
     vim.schedule(function()
         if self.winId and vim.api.nvim_win_is_valid(self.winId[1]) then
             vim.api.nvim_set_current_win(self.winId[1])
         end
     end)
-end
-
-function Game:_clearBuffer()
-    emptyLines = createEmpty(vim.api.nvim_buf_line_count(bufh))
-    self.buffer:write(1, emptyLines)
-    self.buffer:write(2, emptyLines)
 end
 
 return Game

@@ -31,7 +31,7 @@ function Game:new(channel)
     local gameConfig = {
         channel = channel,
         winId = nil,
-        buffer = {},
+        buffer = nil,
         bufh = nil,
     }
 
@@ -53,7 +53,7 @@ function Game:start()
     self.channel:send("ready")
 
     self.state = states.waitingToStart
-    self.buffer[1]:write(self.bufh[1], "Waiting for server response...")
+    self.buffer:write(1, "Waiting for server response...")
     self:_setEditable(false)
 end
 
@@ -75,13 +75,12 @@ function Game:_onMessage(msgType, data)
     log.info("Game:_onMessage", msgType, data)
 
     self:_setEditable(true)
-    self:_clearBuffer(self.bufh[1])
-    self:_clearBuffer(self.bufh[2])
+    self:_clearBuffer(1)
 
     self.left = msg.left
     self.right = msg.right
-    self.buffer[1]:write(self.bufh[1], self.left)
-    self.buffer[2]:write(self.bufh[2], self.right)
+    self.buffer:write(1, self.left)
+    self.buffer:write(2, self.right)
     self:_setEditable(msg.editable)
 
     if msgType == "waiting" then
@@ -107,8 +106,8 @@ function Game:isRunning()
 end
 
 function Game:on_buffer_update(id, ...)
-    log.info("Game:on_buffer_update", id, self.state, not self.editable)
-    if not self.editable then
+    log.info("Game:on_buffer_update", id, self.state, not self.buffer.editable)
+    if not self.buffer.editable then
         return
     end
 
@@ -146,9 +145,7 @@ function Game:on_buffer_update(id, ...)
 end
 
 function Game:_setEditable(editable)
-    self.editable = editable
-    self.buffer[1]:setEditable(editable)
-    self.buffer[2]:setEditable(editable)
+    self.buffer:setEditable(editable)
 end
 
 function Game:_createOrResizeWindow()
@@ -219,9 +216,8 @@ function Game:_createOrResizeWindow()
             self.winId[2], vim.tbl_extend("force", config, rcConfig2))
     end
 
-    if #self.buffer == 0 then
-        self.buffer[1] = Buffer:new(self.winId[1], self.bufh[1])
-        self.buffer[2] = Buffer:new(self.winId[2], self.bufh[2])
+    if not self.buffer then
+        self.buffer = Buffer:new(self.winId, self.bufh)
     end
 end
 
@@ -242,12 +238,10 @@ function Game:focus()
     end)
 end
 
-function Game:_clearBuffer(bufh)
-    local editable = self.editable
-    self:_setEditable(true)
+function Game:_clearBuffer()
     emptyLines = createEmpty(vim.api.nvim_buf_line_count(bufh))
-    vim.api.nvim_buf_set_lines(bufh, 1, #emptyLines, false, emptyLines)
-    self:_setEditable(editable)
+    self.buffer:write(1, emptyLines)
+    self.buffer:write(2, emptyLines)
 end
 
 return Game

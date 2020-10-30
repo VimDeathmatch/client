@@ -54,7 +54,7 @@ function Game:start()
 
     self.state = states.waitingToStart
     self.buffer:write(1, "Waiting for server response...")
-    self:_setEditable(false)
+    self.buffer:setEditable(false)
 end
 
 function Game:isWindowId(winId)
@@ -74,14 +74,14 @@ function Game:_onMessage(msgType, data)
 
     log.info("Game:_onMessage", msgType, data)
 
-    self:_setEditable(true)
+    self.buffer:setEditable(true)
     self:_clearBuffer(1)
 
     self.left = msg.left
     self.right = msg.right
     self.buffer:write(1, self.left)
     self.buffer:write(2, self.right)
-    self:_setEditable(msg.editable)
+    self.buffer:setEditable(msg.editable)
 
     if msgType == "waiting" then
         self.state = states.waitingToStart

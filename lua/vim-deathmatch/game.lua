@@ -96,7 +96,7 @@ function Game:resize()
     self:_createOrResizeWindow()
 end
 
-function Game:on_buffer_update(id, ...)
+function Game:onBufferUpdate(id, ...)
     log.info("Game:on_buffer_update", id, self.state, not self.buffer.editable)
     if not self.buffer.editable then
         return
@@ -158,11 +158,6 @@ function Game:_createOrResizeWindow()
         self.bufh = {vim.fn.nvim_create_buf(false, true),
             vim.fn.nvim_create_buf(false, true)}
 
-        vim.api.nvim_buf_attach(self.bufh[1], false, {
-            on_lines=function(...)
-                self:on_buffer_update(self.bufh[1], ...)
-            end})
-
         self.keysPressed = {}
 
         -- TODO: How to measure undos?
@@ -204,7 +199,9 @@ function Game:_createOrResizeWindow()
     end
 
     if not self.buffer then
-        self.buffer = Buffer:new(self.winId, self.bufh)
+        self.buffer = Buffer:new(self.winId, self.bufh, function(idx)
+            self:onBufferUpdate(idx)
+        end)
     end
 end
 

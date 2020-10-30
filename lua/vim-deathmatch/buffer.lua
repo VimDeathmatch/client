@@ -11,11 +11,17 @@ local function createEmpty(count)
     return lines
 end
 
-function Buffer:new(winId, bufh)
+function Buffer:new(winId, bufh, onBufferUpdate)
     local config = {
         winId = winId,
         bufh = bufh,
     }
+
+    vim.api.nvim_buf_attach(bufh[1], false, {
+        on_lines=function(...)
+            onBufferUpdate(1, ...)
+        end
+    })
 
     self.__index = self
     return setmetatable(config, self)
@@ -73,6 +79,8 @@ function Buffer:destroy()
         vim.api.nvim_win_close(self.winId[idx], true)
     end
 end
+
+
 
 function Buffer:getBufferContents(idx)
     local lineCount = vim.api.nvim_buf_line_count(self.bufh[idx])

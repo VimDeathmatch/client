@@ -106,11 +106,7 @@ function Game:on_buffer_update(id, ...)
         return
     end
 
-    local lineCount = vim.api.nvim_buf_line_count(id)
-    local gameText = tokenize(
-        vim.api.nvim_buf_get_lines(id, 0, lineCount, false))
-
-    log.info("Game:on_buffer_update lineCount", lineCount, #self.right)
+    local gameText = tokenize(self.buffer:getBufferContents(1))
     local idx = 1
     if #gameText ~= #self.right then
         log.info("Game:on_buffer_update#return", #gameText, #self.right)

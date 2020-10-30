@@ -74,4 +74,9 @@ function Buffer:destroy()
     end
 end
 
+function Buffer:getBufferContents(idx)
+    local lineCount = vim.api.nvim_buf_line_count(self.bufh[idx])
+    vim.api.nvim_buf_get_lines(id, 0, lineCount, false)
+end
+
 return Buffer

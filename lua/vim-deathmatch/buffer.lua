@@ -11,7 +11,6 @@ local function createEmpty(count)
     return lines
 end
 
-
 function Buffer:new(winId, bufh)
     local config = {
         winId = winId,
@@ -20,6 +19,12 @@ function Buffer:new(winId, bufh)
 
     self.__index = self
     return setmetatable(config, self)
+end
+
+function Buffer:setFiletype(filetype)
+    for idx = 1, #self.bufh do
+        vim.api.nvim_buf_set_option(self.bufh[idx], "filetype", filetype)
+    end
 end
 
 function Buffer:setEditable(editable)

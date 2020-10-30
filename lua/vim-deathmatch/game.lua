@@ -88,9 +88,8 @@ function Game:_onMessage(msgType, data)
     elseif msgType == "start-game" then
         self.state = states.editing
         self.right = tokenize(self.right)
+        self.buffer:setFiletype(msg.filetype or "javascript")
 
-        vim.api.nvim_buf_set_option(self.bufh[1], "filetype", msg.filetype or "javascript")
-        vim.api.nvim_buf_set_option(self.bufh[2], "filetype", msg.filetype or "javascript")
     elseif msgType == "finished" then
         self.state = states.waitingForResults
     end

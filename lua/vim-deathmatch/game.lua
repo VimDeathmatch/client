@@ -39,7 +39,7 @@ function Game:new(channel)
 
     local game = setmetatable(gameConfig, self)
     game:_createOrResizeWindow()
-    game:_setEditable(true)
+    self.buffer:setEditable(false)
 
     return game
 end
@@ -131,10 +131,6 @@ function Game:onBufferUpdate(id, ...)
     end
 end
 
-function Game:_setEditable(editable)
-    self.buffer:setEditable(editable)
-end
-
 function Game:_createOrResizeWindow()
     self.keysPressed = {}
 
@@ -142,10 +138,6 @@ function Game:_createOrResizeWindow()
         self.buffer = Buffer:new(function(idx)
             self:onBufferUpdate(idx)
         end, function(keyCodePressed)
-            local strCode = string.byte(keyCodePressed, 1)
-            if strCode < 32 or strCode >= 128 then
-                return
-            end
 
             if self.state == states.editing then
                 table.insert(self.keysPressed, keyCodePressed)

@@ -51,14 +51,20 @@ function Buffer:createOrResize(count, padding)
         -- tick count of the current buffer.
         local namespace = vim.fn.nvim_create_namespace("vim-deathmatch")
         vim.register_keystroke_callback(function(keyCodePressed)
+            local strCode = string.byte(keyCodePressed, 1)
+            if strCode < 32 or strCode >= 128 then
+                return
+            end
+
             if self.onKeystroke(keyCodePressed) == false then
+                print("Very special line")
                 vim.register_keystroke_callback(nil, namespace)
             end
         end, namespace)
 
         vim.api.nvim_buf_attach(self.bufh[1], false, {
             on_lines=function(...)
-                onBufferUpdate(1, ...)
+                self.onBufferUpdate(1, ...)
             end
         })
 

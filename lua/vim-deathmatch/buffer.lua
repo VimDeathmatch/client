@@ -58,5 +58,20 @@ function Buffer:clear()
         vim.api.nvim_buf_set_lines(bufh, 0, #emptyLines - 1, false, emptyLines)
     end
 end
+function Buffer:hasWindowId(winId)
+    local found = false
+    for idx = 1, #self.winId do
+        found = found or self.winId[idx] == winId
+    end
+    return found
+end
+
+function Buffer:destroy()
+    log.info("onWinClose", vim.inspect(self.winId), vim.inspect(self.bufh))
+
+    for idx = 1, #self.winId do
+        vim.api.nvim_win_close(self.winId[idx], true)
+    end
+end
 
 return Buffer

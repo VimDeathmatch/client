@@ -57,16 +57,12 @@ function Game:start()
     self.buffer:setEditable(false)
 end
 
-function Game:isWindowId(winId)
-    return self.winId[1] == winId or self.winId[2] == winId
+function Game:hasWindowId(winId)
+    return self.buffer:hasWindowId(winId)
 end
 
 function Game:onWinClose(winId)
-    log.info("onWinClose", winId, self.winId[1], self.winId[2])
-    if self:isWindowId(winId) then
-        vim.api.nvim_win_close(self.winId[1], true)
-        vim.api.nvim_win_close(self.winId[2], true)
-    end
+    self.buffer:destroy(winId)
 end
 
 function Game:_onMessage(msgType, data)
@@ -98,10 +94,6 @@ end
 
 function Game:resize()
     self:_createOrResizeWindow()
-end
-
-function Game:isRunning()
-    return self.bufh ~= nil
 end
 
 function Game:on_buffer_update(id, ...)

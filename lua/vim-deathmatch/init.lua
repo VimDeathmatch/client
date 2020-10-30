@@ -20,8 +20,8 @@ end
 local function onWinClose(winId)
     winId = tonumber(winId)
 
-    if game and game:isWindowId(winId) then
-        game:onWinClose(winId)
+    if game and game:hasWindowId(winId) then
+        game:onWinClose()
         channel:onWinClose(winId)
     end
 

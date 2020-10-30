@@ -53,7 +53,7 @@ function Game:start()
     self.channel:send("ready")
 
     self.state = states.waitingToStart
-    self:_writeBuffer(self.bufh[1], "Waiting for server response...")
+    self.buffer[1]:write(self.bufh[1], "Waiting for server response...")
     self:_setEditable(false)
 end
 
@@ -80,9 +80,8 @@ function Game:_onMessage(msgType, data)
 
     self.left = msg.left
     self.right = msg.right
-
-    self:_writeBuffer(self.bufh[1], self.left)
-    self:_writeBuffer(self.bufh[2], self.right)
+    self.buffer[1]:write(self.bufh[1], self.left)
+    self.buffer[2]:write(self.bufh[2], self.right)
     self:_setEditable(msg.editable)
 
     if msgType == "waiting" then
@@ -223,18 +222,6 @@ function Game:_createOrResizeWindow()
     if #self.buffer == 0 then
         self.buffer[1] = Buffer:new(self.winId[1], self.bufh[1])
         self.buffer[2] = Buffer:new(self.winId[2], self.bufh[2])
-    end
-end
-
-function Game:_writeBuffer(bufh, msg)
-
-    if #self.buffer == 0 then
-        return
-    end
-
-    log.info("Game:_writeBuffer", bufh, msg)
-    for idx = 1, #self.buffer do
-        self.buffer[idx]:write(bufh, msg)
     end
 end
 

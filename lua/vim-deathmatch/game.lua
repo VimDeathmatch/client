@@ -1,4 +1,5 @@
 local log = require("vim-deathmatch.print")
+local Buffer = require("vim-deathmatch.buffer")
 
 local states = {
     waitingToStart = 1,
@@ -30,6 +31,7 @@ function Game:new(channel)
     local gameConfig = {
         channel = channel,
         winId = nil,
+        buffer = {},
         bufh = nil,
     }
 
@@ -146,12 +148,8 @@ end
 
 function Game:_setEditable(editable)
     self.editable = editable
-    if not self.bufh[1] then
-        return
-    end
-
-    vim.api.nvim_buf_set_option(self.bufh[1], "modifiable", editable)
-    vim.api.nvim_buf_set_option(self.bufh[2], "modifiable", editable)
+    self.buffer[1]:setEditable(editable)
+    self.buffer[2]:setEditable(editable)
 end
 
 function Game:_createOrResizeWindow()
@@ -221,28 +219,23 @@ function Game:_createOrResizeWindow()
         vim.api.nvim_win_set_config(
             self.winId[2], vim.tbl_extend("force", config, rcConfig2))
     end
+
+    if #self.buffer == 0 then
+        self.buffer[1] = Buffer:new(self.winId[1], self.bufh[1])
+        self.buffer[2] = Buffer:new(self.winId[2], self.bufh[2])
+    end
 end
 
 function Game:_writeBuffer(bufh, msg)
 
-    if not self.bufh then
+    if #self.buffer == 0 then
         return
     end
 
-    if msg == nil then
-        return
+    log.info("Game:_writeBuffer", bufh, msg)
+    for idx = 1, #self.buffer do
+        self.buffer[idx]:write(bufh, msg)
     end
-
-    local editable = self.editable
-    self:_setEditable(true)
-    log.info("Game:_writeBuffer", #msg, bufh, msg)
-
-    if type(msg) ~= "table" then
-        msg = {msg}
-    end
-
-    vim.api.nvim_buf_set_lines(bufh, 0, #msg - 1, false, msg)
-    self:_setEditable(editable)
 end
 
 local function createEmpty(count)

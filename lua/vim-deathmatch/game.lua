@@ -136,36 +136,12 @@ function Game:_setEditable(editable)
 end
 
 function Game:_createOrResizeWindow()
+    self.keysPressed = {}
 
-    local vimStats = vim.api.nvim_list_uis()[1]
-    local w = vimStats.width
-    local h = vimStats.height
-
-    local width = math.floor(w / 2) - 2
-    local height = h - 2
-    local rcConfig1 = { row = 1, col = 1 }
-
-    local rcConfig2 = { row = 1, col = width + 2 }
-
-    local config = {
-        style = "minimal",
-        relative = "win",
-        width = width,
-        height = height
-    }
-
-    if not self.bufh then
-        self.bufh = {vim.fn.nvim_create_buf(false, true),
-            vim.fn.nvim_create_buf(false, true)}
-
-        self.keysPressed = {}
-
-        -- TODO: How to measure undos?
-        -- I think they are done in buf attach, we should be able to see the
-        -- tick count of the current buffer.
-        local namespace = vim.fn.nvim_create_namespace("vim-deathmatch")
-        vim.register_keystroke_callback(function(keyCodePressed)
-
+    if not self.buffer then
+        self.buffer = Buffer:new(function(idx)
+            self:onBufferUpdate(idx)
+        end, function(keyCodePressed)
             local strCode = string.byte(keyCodePressed, 1)
             if strCode < 32 or strCode >= 128 then
                 return
@@ -176,33 +152,12 @@ function Game:_createOrResizeWindow()
             end
 
             if self.state == states.ended then
-                vim.register_keystroke_callback(nil, namespace)
+                return false
             end
-        end, namespace)
-    end
-
-    if not self.winId then
-        self.winId = {
-            vim.api.nvim_open_win(self.bufh[1], true,
-                vim.tbl_extend("force", config, rcConfig1)),
-            vim.api.nvim_open_win(self.bufh[2],
-                false, vim.tbl_extend("force", config, rcConfig2)),
-        }
-        log.info("Game:_createOrResizeWindow: new windows", vim.inspect(self.winId))
-    else
-
-        log.info("Game:_createOrResizeWindow: resizing windows", vim.inspect(rcConfig1))
-        vim.api.nvim_win_set_config(
-            self.winId[1], vim.tbl_extend("force", config, rcConfig1))
-        vim.api.nvim_win_set_config(
-            self.winId[2], vim.tbl_extend("force", config, rcConfig2))
-    end
-
-    if not self.buffer then
-        self.buffer = Buffer:new(self.winId, self.bufh, function(idx)
-            self:onBufferUpdate(idx)
         end)
     end
+
+    self.buffer:createOrResize(2, 2)
 end
 
 function Game:focus()

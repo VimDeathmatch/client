@@ -149,7 +149,10 @@ function Game:_createOrResizeWindow()
         end)
     end
 
-    self.buffer:createOrResize(2, 2)
+    self.buffer:createOrResize({
+        count = 2,
+        padding = 2,
+    })
 end
 
 function Game:focus()

@@ -33,43 +33,91 @@ function Buffer:_attachListeners(bufh, idx)
         end
 
         if self.onKeystroke(keyCodePressed) == false then
-            print("Very special line")
             vim.register_keystroke_callback(nil, namespace)
         end
     end, namespace)
 
     vim.api.nvim_buf_attach(bufh, false, {
         on_lines=function(...)
-            self.onBufferUpdate(idx, ...)
+            if self.onBufferUpdate then
+                self.onBufferUpdate(idx, ...)
+            end
         end
     })
 
 end
 
-function getBaseConfig(width, height)
-    return {
-        style = "minimal",
-        relative = "win",
-        width = width,
-        height = height
-    }
+local modes = {
+    auto = 1,
+    predefined = 2,
+}
+
+function getOtherIdx(idx)
+    return idx == 1 and 2 or 1
 end
 
-function Buffer:createOrResize(count, padding)
+function getWidth(w, config, idx)
+    local computedW = w - 2 * config.padding
+    if config.count == 1 then
+        print("XXXX getWidth", w, computedW)
+        return computedW
+    end
+
+    computedW = computedW - 1
+
+    local mode = modes.auto
+    for i = 1, #config.dim do
+        if config.dim[i] and config.dim[i].width ~= nil then
+            mode = modes.predefined
+        end
+    end
+
+    if mode == modes.auto then
+        return math.floor(computedW / config.count)
+    end
+
+    local dim = config.dim[idx] or {}
+    return dim.width or (computedW - config.dim[getOtherIdx(idx)].width)
+end
+
+function getConfig(w, h, idx, config)
+    local outConfig = {
+        style = "minimal",
+        relative = "win",
+        width = getWidth(w, config, idx),
+        height = h - config.padding * 2,
+        row = config.padding,
+        col = idx == 1 and config.padding or (getWidth(w, config, getOtherIdx(idx)) + 1 + config.padding),
+    }
+    print("XXXX", vim.inspect(outConfig))
+    return outConfig
+end
+
+--[[
+--{
+--  count: number,
+--  padding: number,
+--  dim: [{
+--    width: undefined, number
+--    height: undefined, number
+--  }]
+--}
+--]]
+function Buffer:createOrResize(windowConfig)
     if self.bufh and #self.bufh ~= count then
         self:destroy()
+    end
+
+    if not windowConfig["dim"] then
+        windowConfig["dim"] = {}
     end
 
     local vimStats = vim.api.nvim_list_uis()[1]
     local w = vimStats.width
     local h = vimStats.height
 
-    local width = math.floor(w / count) - padding
-    local height = h - 2
-    local rcConfig1 = { row = 1, col = 1 }
-    local rcConfig2 = { row = 1, col = width + padding }
-
-    local config = getBaseConfig(width, height)
+    local config1 = getConfig(w, h, 1, windowConfig)
+    local config2 = getConfig(w, h, 2, windowConfig)
 
     if not self.bufh then
         self.bufh = {vim.fn.nvim_create_buf(false, true),
@@ -80,19 +128,15 @@ function Buffer:createOrResize(count, padding)
 
     if not self.winId then
         self.winId = {
-            vim.api.nvim_open_win(self.bufh[1], true,
-                vim.tbl_extend("force", config, rcConfig1)),
-            vim.api.nvim_open_win(self.bufh[2],
-                false, vim.tbl_extend("force", config, rcConfig2)),
+            vim.api.nvim_open_win(self.bufh[1], true, config1),
+            vim.api.nvim_open_win(self.bufh[2], false, config2),
         }
         log.info("Buffer:_createOrResizeWindow: new windows", vim.inspect(self.winId))
     else
 
         log.info("Buffer:_createOrResizeWindow: resizing windows", vim.inspect(rcConfig1))
-        vim.api.nvim_win_set_config(
-            self.winId[1], vim.tbl_extend("force", config, rcConfig1))
-        vim.api.nvim_win_set_config(
-            self.winId[2], vim.tbl_extend("force", config, rcConfig2))
+        vim.api.nvim_win_set_config(self.winId[1], config1)
+        vim.api.nvim_win_set_config(self.winId[2], config2)
     end
 end
 
@@ -115,7 +159,7 @@ function Buffer:write(idx, msg)
         return
     end
 
-    local editable = self.editable
+    local editable = self.editable or false
     self:setEditable(true)
 
     if type(msg) ~= "table" then
@@ -144,8 +188,20 @@ end
 function Buffer:destroy()
     log.info("onWinClose", vim.inspect(self.winId), vim.inspect(self.bufh))
 
+    local namespace = vim.fn.nvim_create_namespace("vim-deathmatch")
+    vim.register_keystroke_callback(nil, namespace)
+
     for idx = 1, #self.winId do
-        vim.api.nvim_win_close(self.winId[idx], true)
+        local wId = self.winId[idx]
+        if vim.api.nvim_win_is_valid(wId) then
+            vim.api.nvim_win_close(wId, true)
+        end
+    end
+
+    for idx = 1, #self.bufh do
+        if self.bufh[idx] ~= nil then
+            vim.api.nvim_buf_delete(self.bufh[idx], {force = true})
+        end
     end
 end
 

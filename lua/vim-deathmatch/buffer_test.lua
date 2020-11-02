@@ -3,7 +3,7 @@ for k in pairs(package.loaded) do
         package.loaded[k] = nil
     end
 end
-local timeBetwixt = 3000
+local timeBetwixt = 1000
 
 local log = require("vim-deathmatch.print")
 local Buffer = require("vim-deathmatch.buffer")
@@ -81,7 +81,7 @@ function case1()
 
 end
 
-case3()
+case1()
 
 
 

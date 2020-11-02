@@ -59,7 +59,6 @@ end
 function getWidth(w, config, idx)
     local computedW = w - 2 * config.padding
     if config.count == 1 then
-        print("XXXX getWidth", w, computedW)
         return computedW
     end
 
@@ -89,7 +88,6 @@ function getConfig(w, h, idx, config)
         row = config.padding,
         col = idx == 1 and config.padding or (getWidth(w, config, getOtherIdx(idx)) + 1 + config.padding),
     }
-    print("XXXX", vim.inspect(outConfig))
     return outConfig
 end
 
@@ -116,28 +114,30 @@ function Buffer:createOrResize(windowConfig)
     local w = vimStats.width
     local h = vimStats.height
 
-    local config1 = getConfig(w, h, 1, windowConfig)
-    local config2 = getConfig(w, h, 2, windowConfig)
+    self.bufh = {}
+    self.winId = {}
 
-    if not self.bufh then
-        self.bufh = {vim.fn.nvim_create_buf(false, true),
-            vim.fn.nvim_create_buf(false, true)}
+    for idx = 1, windowConfig.count do
+        local config = getConfig(w, h, idx, windowConfig)
 
-        self:_attachListeners(self.bufh[1], 1)
+        if #self.bufh < windowConfig.count then
+            table.insert(self.bufh, vim.fn.nvim_create_buf(false, true))
+
+            if idx == 1 then
+                self:_attachListeners(self.bufh[1], 1)
+            end
+        end
+
+        if #self.winId < windowConfig.count then
+            table.insert(self.winId, vim.api.nvim_open_win(self.bufh[idx], true, config))
+        else
+            vim.api.nvim_win_set_config(self.winId[idx], config)
+        end
+
     end
 
-    if not self.winId then
-        self.winId = {
-            vim.api.nvim_open_win(self.bufh[1], true, config1),
-            vim.api.nvim_open_win(self.bufh[2], false, config2),
-        }
-        log.info("Buffer:_createOrResizeWindow: new windows", vim.inspect(self.winId))
-    else
-
-        log.info("Buffer:_createOrResizeWindow: resizing windows", vim.inspect(rcConfig1))
-        vim.api.nvim_win_set_config(self.winId[1], config1)
-        vim.api.nvim_win_set_config(self.winId[2], config2)
-    end
+    log.info("Buffer:_createOrResizeWindow: ",
+        vim.inspect(self.bufh), vim.inspect(self.winId))
 end
 
 function Buffer:setFiletype(filetype)

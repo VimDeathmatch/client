@@ -39,7 +39,7 @@ function Game:new(channel)
 
     local game = setmetatable(gameConfig, self)
     game:_createOrResizeWindow()
-    self.buffer:setEditable(false)
+    game.buffer:setEditable(false)
 
     return game
 end

@@ -21,6 +21,40 @@ function Buffer:new(onBufferUpdate, onKeystroke)
     return setmetatable(config, self)
 end
 
+function Buffer:_attachListeners(bufh, idx)
+    -- TODO: How to measure undos?
+    -- I think they are done in buf attach, we should be able to see the
+    -- tick count of the current buffer.
+    local namespace = vim.fn.nvim_create_namespace("vim-deathmatch")
+    vim.register_keystroke_callback(function(keyCodePressed)
+        local strCode = string.byte(keyCodePressed, 1)
+        if strCode < 32 or strCode >= 128 then
+            return
+        end
+
+        if self.onKeystroke(keyCodePressed) == false then
+            print("Very special line")
+            vim.register_keystroke_callback(nil, namespace)
+        end
+    end, namespace)
+
+    vim.api.nvim_buf_attach(bufh, false, {
+        on_lines=function(...)
+            self.onBufferUpdate(idx, ...)
+        end
+    })
+
+end
+
+function getBaseConfig(width, height)
+    return {
+        style = "minimal",
+        relative = "win",
+        width = width,
+        height = height
+    }
+end
+
 function Buffer:createOrResize(count, padding)
     if self.bufh and #self.bufh ~= count then
         self:destroy()
@@ -35,39 +69,13 @@ function Buffer:createOrResize(count, padding)
     local rcConfig1 = { row = 1, col = 1 }
     local rcConfig2 = { row = 1, col = width + padding }
 
-    local config = {
-        style = "minimal",
-        relative = "win",
-        width = width,
-        height = height
-    }
+    local config = getBaseConfig(width, height)
 
     if not self.bufh then
         self.bufh = {vim.fn.nvim_create_buf(false, true),
             vim.fn.nvim_create_buf(false, true)}
 
-        -- TODO: How to measure undos?
-        -- I think they are done in buf attach, we should be able to see the
-        -- tick count of the current buffer.
-        local namespace = vim.fn.nvim_create_namespace("vim-deathmatch")
-        vim.register_keystroke_callback(function(keyCodePressed)
-            local strCode = string.byte(keyCodePressed, 1)
-            if strCode < 32 or strCode >= 128 then
-                return
-            end
-
-            if self.onKeystroke(keyCodePressed) == false then
-                print("Very special line")
-                vim.register_keystroke_callback(nil, namespace)
-            end
-        end, namespace)
-
-        vim.api.nvim_buf_attach(self.bufh[1], false, {
-            on_lines=function(...)
-                self.onBufferUpdate(1, ...)
-            end
-        })
-
+        self:_attachListeners(self.bufh[1], 1)
     end
 
     if not self.winId then

@@ -1,4 +1,5 @@
 local Channel = require("vim-deathmatch.channel")
+local Intro = require("vim-deathmatch.intro")
 local Game = require("vim-deathmatch.game")
 local log = require("vim-deathmatch.print")
 
@@ -29,7 +30,7 @@ local function onWinClose(winId)
     channel = nil
 end
 
-local function start()
+local function startGame()
     channel = Channel:new(function(data)
         print("Data", data)
     end)
@@ -43,6 +44,10 @@ local function start()
         game = Game:new(channel)
         game:start()
     end))
+end
+
+local function start()
+    local intro = Intro:new()
 end
 
 return {

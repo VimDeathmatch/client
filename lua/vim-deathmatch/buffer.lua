@@ -11,52 +11,11 @@ local function createEmpty(count)
     return lines
 end
 
-function Buffer:new(onBufferUpdate, onKeystroke)
-    local config = {
-        onBufferUpdate = onBufferUpdate,
-        onKeystroke = onKeystroke,
-    }
-
-    self.__index = self
-    return setmetatable(config, self)
-end
-
-function Buffer:_attachListeners(bufh, idx)
-    -- TODO: How to measure undos?
-    -- I think they are done in buf attach, we should be able to see the
-    -- tick count of the current buffer.
-    local namespace = vim.fn.nvim_create_namespace("vim-deathmatch")
-    vim.register_keystroke_callback(function(keyCodePressed)
-        local strCode = string.byte(keyCodePressed, 1)
-        if strCode < 32 or strCode >= 128 then
-            return
-        end
-
-        if self.onKeystroke(keyCodePressed) == false then
-            vim.register_keystroke_callback(nil, namespace)
-        end
-    end, namespace)
-
-    vim.api.nvim_buf_attach(bufh, false, {
-        on_lines=function(...)
-            if self.onBufferUpdate then
-                self.onBufferUpdate(idx, ...)
-            end
-        end
-    })
-
-end
-
-local modes = {
-    auto = 1,
-    predefined = 2,
-}
-
-function getOtherIdx(idx)
+local function getOtherIdx(idx)
     return idx == 1 and 2 or 1
 end
 
-function getWidth(w, config, idx)
+local function getWidth(w, config, idx)
     local computedW = w - 2 * config.padding
     if config.count == 1 then
         return computedW
@@ -78,6 +37,58 @@ function getWidth(w, config, idx)
     local dim = config.dim[idx] or {}
     return dim.width or (computedW - config.dim[getOtherIdx(idx)].width)
 end
+
+function Buffer:new(onBufferUpdate, onKeystroke)
+    local config = {
+        onBufferUpdate = onBufferUpdate,
+        onKeystroke = onKeystroke,
+    }
+
+    self.__index = self
+    return setmetatable(config, self)
+end
+
+function Buffer:getBufferDimensions(idx)
+    local vimStats = vim.api.nvim_list_uis()[1]
+    local w = vimStats.width
+
+    return {
+        width = getWidth(w, self.lastWindowConfig, idx),
+        height = vimStats.height - self.lastWindowConfig.padding * 2,
+    }
+end
+
+function Buffer:_attachListeners(bufh, idx)
+    -- TODO: How to measure undos?
+    -- I think they are done in buf attach, we should be able to see the
+    -- tick count of the current buffer.
+    local namespace = vim.fn.nvim_create_namespace("vim-deathmatch")
+    vim.register_keystroke_callback(function(keyCodePressed)
+        local strCode = string.byte(keyCodePressed, 1)
+        if strCode < 32 or strCode >= 128 then
+            return
+        end
+
+        if self.onKeyStroke and self.onKeystroke(keyCodePressed) == false then
+            vim.register_keystroke_callback(nil, namespace)
+        end
+    end, namespace)
+
+    vim.api.nvim_buf_attach(bufh, false, {
+        on_lines=function(...)
+            if self.onBufferUpdate then
+                self.onBufferUpdate(idx, ...)
+            end
+        end
+    })
+
+end
+
+local modes = {
+    auto = 1,
+    predefined = 2,
+}
+
 
 function getConfig(w, h, idx, config)
     local outConfig = {
@@ -109,6 +120,8 @@ function Buffer:createOrResize(windowConfig)
     if not windowConfig["dim"] then
         windowConfig["dim"] = {}
     end
+
+    self.lastWindowConfig = windowConfig
 
     local vimStats = vim.api.nvim_list_uis()[1]
     local w = vimStats.width

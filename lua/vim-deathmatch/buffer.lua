@@ -129,7 +129,7 @@ function Buffer:createOrResize(windowConfig)
         end
 
         if #self.winId < windowConfig.count then
-            table.insert(self.winId, vim.api.nvim_open_win(self.bufh[idx], true, config))
+            table.insert(self.winId, vim.api.nvim_open_win(self.bufh[idx], idx == 1, config))
         else
             vim.api.nvim_win_set_config(self.winId[idx], config)
         end

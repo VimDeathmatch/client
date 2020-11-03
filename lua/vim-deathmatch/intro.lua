@@ -1,5 +1,6 @@
 local log = require("vim-deathmatch.print")
-local Buffer = require("vim-deathmatch.buffer")
+local BufferM = require("vim-deathmatch.buffer")
+local Buffer = BufferM.Buffer
 
 local Intro = {}
 
@@ -98,6 +99,10 @@ function Intro:_render()
     append(toRender, options)
 
     self.buffer:write(1, toRender)
+end
+
+function Intro:hasWindowId(winId)
+    return self.buffer:hasWindowId(winId)
 end
 
 function Intro:resize()

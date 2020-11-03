@@ -1,6 +1,8 @@
 local log = require("vim-deathmatch.print")
 
 local Buffer = {}
+local REQUIRED_WIDTH = 80
+local REQUIRED_HEIGHT = 24
 
 local function createEmpty(count)
     local lines = {}
@@ -56,6 +58,14 @@ function Buffer:getBufferDimensions(idx)
         width = getWidth(w, self.lastWindowConfig, idx),
         height = vimStats.height - self.lastWindowConfig.padding * 2,
     }
+end
+
+function Buffer:focus(idx)
+    vim.schedule(function()
+        if self.winId and vim.api.nvim_win_is_valid(self.winId[1]) then
+            vim.api.nvim_set_current_win(self.winId[1])
+        end
+    end)
 end
 
 function Buffer:_attachListeners(bufh, idx)
@@ -234,4 +244,11 @@ function Buffer:getBufferContents(idx)
     vim.api.nvim_buf_get_lines(id, 0, lineCount, false)
 end
 
-return Buffer
+return {
+    isWindowValid = function()
+        local vimStats = vim.api.nvim_list_uis()[1]
+        return vimStats.width >= REQUIRED_WIDTH and
+            vimStats.height >= REQUIRED_HEIGHT
+    end,
+    Buffer = Buffer
+}

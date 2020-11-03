@@ -1,5 +1,6 @@
 local log = require("vim-deathmatch.print")
-local Buffer = require("vim-deathmatch.buffer")
+local BufferM = require("vim-deathmatch.buffer")
+local Buffer = BufferM.Buffer
 
 local states = {
     waitingToStart = 1,
@@ -156,11 +157,7 @@ function Game:_createOrResizeWindow()
 end
 
 function Game:focus()
-    vim.schedule(function()
-        if self.winId and vim.api.nvim_win_is_valid(self.winId[1]) then
-            vim.api.nvim_set_current_win(self.winId[1])
-        end
-    end)
+    self.buffer:focus(1)
 end
 
 return Game

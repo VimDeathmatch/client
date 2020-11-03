@@ -5,6 +5,7 @@ local log = require("vim-deathmatch.print")
 
 local channel = nil
 local game = nil
+local intro = nil
 
 local function onWinLeave()
     if game then
@@ -14,7 +15,9 @@ end
 
 local function onResized()
     if game then
-        game:_createOrResizeWindow()
+        game:resize()
+    elseif intro then
+        intro:resize()
     end
 end
 
@@ -47,7 +50,7 @@ local function startGame()
 end
 
 local function start()
-    local intro = Intro:new()
+    intro = Intro:new()
 end
 
 return {

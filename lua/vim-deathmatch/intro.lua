@@ -35,13 +35,17 @@ function Intro:new()
     self.__index = self
     local intro = setmetatable(config, self)
 
-    intro.buffer:createOrResize({
-        count = 1,
-        padding = 7,
-    })
+    intro:createWindow()
     intro:_render()
 
     return intro
+end
+
+function Intro:createWindow()
+    self.buffer:createOrResize({
+        count = 1,
+        padding = 7,
+    })
 end
 
 function append(t1, t2)
@@ -94,6 +98,11 @@ function Intro:_render()
     append(toRender, options)
 
     self.buffer:write(1, toRender)
+end
+
+function Intro:resize()
+    self:createWindow()
+    self:_render()
 end
 
 function Intro:onBufferUpdate()

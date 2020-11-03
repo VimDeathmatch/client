@@ -142,15 +142,13 @@ function Buffer:createOrResize(windowConfig)
         end
 
         if #self.winId < windowConfig.count then
+            log.info("Buffer:createWindow ", idx, vim.inspect(config))
             table.insert(self.winId, vim.api.nvim_open_win(self.bufh[idx], idx == 1, config))
         else
+            log.info("Buffer:resizeWindow ", idx, vim.inspect(config))
             vim.api.nvim_win_set_config(self.winId[idx], config)
         end
-
     end
-
-    log.info("Buffer:_createOrResizeWindow: ",
-        vim.inspect(self.bufh), vim.inspect(self.winId))
 end
 
 function Buffer:setFiletype(filetype)
@@ -166,28 +164,39 @@ function Buffer:setEditable(editable)
     end
 end
 
+function Buffer:_modifyBuffer(cb)
+    local editable = self.editable or false
+    self:setEditable(true)
+    ok, msg = pcall(cb)
+
+    if not ok then
+        log.error("Buffer#_modifyBuffer", msg)
+    end
+
+    self:setEditable(editable)
+end
+
 function Buffer:write(idx, msg)
 
     if msg == nil then
         return
     end
 
-    local editable = self.editable or false
-    self:setEditable(true)
-
     if type(msg) ~= "table" then
         msg = {msg}
     end
 
-    vim.api.nvim_buf_set_lines(self.bufh[idx], 0, #msg - 1, false, msg)
-    self:setEditable(editable)
+    self:_modifyBuffer(function()
+        vim.api.nvim_buf_set_lines(self.bufh[idx], 0, #msg - 1, false, msg)
+    end)
 end
 
 function Buffer:clear()
     for idx = 1, #self.bufh do
         local bufh = self.bufh[idx]
-        emptyLines = createEmpty(vim.api.nvim_buf_line_count(bufh))
-        vim.api.nvim_buf_set_lines(bufh, 0, #emptyLines - 1, false, emptyLines)
+        self:_modifyBuffer(function()
+            vim.api.nvim_buf_set_lines(bufh, 0, -1, false, {})
+        end)
     end
 end
 function Buffer:hasWindowId(winId)

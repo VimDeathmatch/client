@@ -6,8 +6,7 @@ end
 local timeBetwixt = 1000
 
 local log = require("vim-deathmatch.print")
-local Buffer = require("vim-deathmatch.buffer")
-
+local Buffer = require("vim-deathmatch.buffer").Buffer
 
 function case3()
     local buf = Buffer:new(

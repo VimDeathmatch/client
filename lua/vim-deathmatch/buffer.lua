@@ -3,6 +3,12 @@ local log = require("vim-deathmatch.print")
 local Buffer = {}
 local REQUIRED_WIDTH = 80
 local REQUIRED_HEIGHT = 24
+local ns = vim.api.nvim_create_namespace("vdm-buffer")
+
+local modes = {
+    auto = 1,
+    predefined = 2,
+}
 
 local function createEmpty(count)
     local lines = {}
@@ -44,6 +50,9 @@ function Buffer:new(onBufferUpdate, onKeystroke)
     local config = {
         onBufferUpdate = onBufferUpdate,
         onKeystroke = onKeystroke,
+        marks = {},
+        bufh = {},
+        winId = {},
     }
 
     self.__index = self
@@ -94,12 +103,6 @@ function Buffer:_attachListeners(bufh, idx)
 
 end
 
-local modes = {
-    auto = 1,
-    predefined = 2,
-}
-
-
 function getConfig(w, h, idx, config)
     local outConfig = {
         style = "minimal",
@@ -137,14 +140,12 @@ function Buffer:createOrResize(windowConfig)
     local w = vimStats.width
     local h = vimStats.height
 
-    self.bufh = {}
-    self.winId = {}
-
     for idx = 1, windowConfig.count do
         local config = getConfig(w, h, idx, windowConfig)
 
         if #self.bufh < windowConfig.count then
             table.insert(self.bufh, vim.fn.nvim_create_buf(false, true))
+            table.insert(self.marks, {})
 
             if idx == 1 then
                 self:_attachListeners(self.bufh[1], 1)
@@ -235,13 +236,54 @@ function Buffer:destroy()
             vim.api.nvim_buf_delete(self.bufh[idx], {force = true})
         end
     end
+
+    self.bufh = {}
+    self.winId = {}
+    self.marks = {}
 end
 
+function Buffer:removeAllExtMarks(idx)
+    if not self.marks[idx] then
+        return
+    end
 
+    for mi = 1, #self.marks[idx] do
+        vim.api.nvim_buf_del_extmark(self.bufh[idx], ns, self.marks[idx][mi])
+    end
+
+    self.marks[idx] = {}
+end
+
+function Buffer:setExtMark(idx, line, col)
+    if not self.marks[idx] then
+        return
+    end
+
+    local mark = vim.api.nvim_buf_set_extmark(self.bufh[idx], ns, line, col, {})
+    table.insert(self.marks[idx], mark)
+end
+
+function Buffer:getMarks(idx)
+    local marks = {}
+    local buf = self.bufh[idx]
+    local markSet = self.marks[idx]
+
+
+    if not markSet or not buf then
+        return marks
+    end
+
+    for mi = 1, #markSet do
+        local foundMark = vim.api.nvim_buf_get_extmark_by_id(buf, ns, markSet[mi], {})
+        table.insert(marks, foundMark)
+    end
+
+    return marks
+end
 
 function Buffer:getBufferContents(idx)
     local lineCount = vim.api.nvim_buf_line_count(self.bufh[idx])
-    vim.api.nvim_buf_get_lines(id, 0, lineCount, false)
+    return vim.api.nvim_buf_get_lines(id, 0, lineCount, false)
 end
 
 return {

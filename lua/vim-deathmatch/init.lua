@@ -40,6 +40,7 @@ local function onWinClose(winId)
 end
 
 local function startGame()
+    log.info("init#startGame")
     channel = Channel:new(function(data)
         print("Data", data)
     end)
@@ -55,16 +56,19 @@ local function startGame()
     end))
 end
 
-function Intro:focus()
-    self.buffer:focus(1)
-end
-
 local function start()
     if not isWindowValid() then
         vim.api.nvim_err_write("You need to provide a larger window to play Vim Deathmatch. 80x24 Required\n")
         return
     end
-    intro = Intro:new()
+
+    intro = Intro:new(function()
+        vim.schedule(function()
+            intro:onWinClose()
+            intro = nil
+            startGame()
+        end)
+    end)
 end
 
 return {

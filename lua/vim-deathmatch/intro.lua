@@ -38,11 +38,15 @@ local footers = {
     "",
     "",
     "Sponsored by Beastco.  TJ gave me the answers.  Beginbot has a nice mustache.",
-    "OnlyDevs",
+    "OnlyDevs   8 is equivalent to D.",
 }
 
 function ltrim(s)
-  return s:match'^%s*(.*)'
+    if not s then
+        return ""
+    end
+
+    return s:match'^%s*(.*)'
 end
 
 function Intro:new(findGame)
@@ -168,6 +172,10 @@ function Intro:_optionSelected()
     return false
 end
 
+function Intro:onWinClose(winId)
+    self.buffer:destroy()
+end
+
 function Intro:onBufferUpdate()
     if self.rendering or self:_optionSelected() then
         return
@@ -177,6 +185,10 @@ function Intro:onBufferUpdate()
         log.info("Intro:onBufferUpdate#rerender")
         self:_render()
     end)
+end
+
+function Intro:focus()
+    self.buffer:focus(1)
 end
 
 return Intro

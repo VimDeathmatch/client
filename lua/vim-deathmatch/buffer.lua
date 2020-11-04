@@ -233,7 +233,8 @@ function Buffer:destroy()
 
     for idx = 1, #self.bufh do
         if self.bufh[idx] ~= nil then
-            vim.api.nvim_buf_delete(self.bufh[idx], {force = true})
+            local bufh = self.bufh[idx]
+            vim.api.nvim_buf_delete(bufh, {force = true})
         end
     end
 
